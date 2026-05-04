@@ -1,4 +1,4 @@
-name: Label new issues with GSSoC
+name: Label new issues with NSoC
 
 on:
   issues:
@@ -19,7 +19,7 @@ jobs:
             const repo = context.repo.repo;
             const issue_number = context.payload.issue.number;
             
-            const label = 'NSoC'26';
+            const label = "NSoC'26";
             const color = 'C0F486'; 
             const description = 'Under Nexus Spring of Code';
             
