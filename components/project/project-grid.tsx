@@ -3,31 +3,76 @@
 import { projectConfig } from "@/config/projects";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { FaGithub, FaLink, FaSearch, FaYoutube } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
+import { FaGithub, FaLink, FaSearch, FaYoutube , FaBookmark} from "react-icons/fa";
 import SearchBar from "./search-bar";
 
 export default function ProjectGrid() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  useEffect(() => {
+     const storedFavorites = localStorage.getItem("favoriteProjects");
+
+     if (storedFavorites) {
+       setFavorites(JSON.parse(storedFavorites));
+     }
+  }, []);
+
+  const toggleFavorite = (projectName: string) => {
+     let updatedFavorites: string[];
+
+     if (favorites.includes(projectName)) {
+        updatedFavorites = favorites.filter(
+          (item) => item !== projectName
+        );
+     } else {
+        updatedFavorites = [...favorites, projectName];
+     }
+
+    setFavorites(updatedFavorites);
+
+    localStorage.setItem(
+      "favoriteProjects",
+      JSON.stringify(updatedFavorites)
+    );
+  };
 
   const filteredProjects = useMemo(() => {
     return projectConfig.projects.filter((item) => {
       const query = searchQuery.toLowerCase();
 
-      return (
+      const matchesSearch =
         item.projectName.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query) ||
-        (item.techStack &&
-          item.techStack.some((tech: string) =>
-            tech.toLowerCase().includes(query),
-          ))
-      );
-    });
-  }, [searchQuery]);
+        (item.techStack && 
+          item.techStack.some((tech: string) => 
+            tech.toLowerCase().includes(query)
+        ));
+
+    const matchesFavorites =
+       !showFavorites || favorites.includes(item.projectName);
+
+    return matchesSearch && matchesFavorites;
+    });  
+  }, [searchQuery, favorites, showFavorites]);
 
   return (
     <div className="mt-15">
       <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+
+        <div className="mt-6 mb-8 flex items-center gap-4">
+          <button
+            onClick={() => setShowFavorites((prev) => !prev)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
+              showFavorites ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-400" : "border-border bg-background text-foreground hover:bg-muted"
+            } transition-colors duration-300 hover:bg-primary/10`}
+          >
+            <FaBookmark />
+            {showFavorites ? "Show All" : "Show Favorites"}
+          </button>
+        </div>
 
       {filteredProjects.length > 0 ? (
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
@@ -48,6 +93,16 @@ export default function ProjectGrid() {
                   priority={index === 0}
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <button
+                  onClick={() => toggleFavorite(item.projectName)}
+                  className={`absolute top-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-black/60 ${
+                    favorites.includes(item.projectName)
+                      ? "text-yellow-400"
+                      : "text-white/70"
+                  }`}
+                >
+                  <FaBookmark />
+                </button>
               </div>
 
               <div className="relative p-6">
