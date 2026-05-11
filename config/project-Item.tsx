@@ -9,13 +9,16 @@ export const projectItemConfig: ProjectItems[] = [
     githubLink: "https://github.com/Vaibhav-kesarwani/sendly",
     liveLink: "https://sendlyfile.vercel.app/",
     techStack: ["Next.js", "TypeScript", "Tailwind", "Supabase", "Prisma"],
+    difficulty: "Advanced",
   },
   {
     projectName: "ShowTime",
-    description: "A cinematic streaming guide built with React featuring real-time movie search and a personalised watchlist to track your favourites.",
+    description:
+      "A cinematic streaming guide built with React featuring real-time movie search and a personalised watchlist to track your favourites.",
     projectImage: "showtime.png",
     githubLink: "https://github.com/Rishikapurbey/ShowTime",
     liveLink: "https://harmonious-maamoul-e4854c.netlify.app/",
-    techStack: ["React js", "JavaScript", "CSS","HTML"],
-},
+    techStack: ["React js", "JavaScript", "CSS", "HTML"],
+    difficulty: "Intermediate",
+  },
 ];

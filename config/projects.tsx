@@ -8,6 +8,7 @@ export interface ProjectItems {
   liveLink?: string;
   ytLink?: string;
   techStack: string[];
+  difficulty: string;
 }
 
 interface Project {
