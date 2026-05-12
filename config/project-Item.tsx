@@ -21,4 +21,13 @@ export const projectItemConfig: ProjectItems[] = [
     techStack: ["React js", "JavaScript", "CSS", "HTML"],
     difficulty: "Intermediate",
   },
+  {
+    projectName: "Pomodoro Timer",
+    description:
+      "A productivity timer built with React featuring work and break sessions, countdown timer, start/pause/reset controls, and session tracking.",
+    projectImage: "pomodoro-timer.png",
+    githubLink: "https://github.com/chopadkartanishka/100-reactjs-projects",
+    techStack: ["React js", "JavaScript", "CSS", "HTML"],
+    difficulty: "Intermediate",
+  },
 ];
