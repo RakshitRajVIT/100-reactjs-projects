@@ -1,16 +1,75 @@
 "use client";
 
 import { projectConfig } from "@/config/projects";
-import Image from "next/image";
+import { db } from "@/lib/firebase";
+import { onValue, ref } from "firebase/database";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { FaGithub, FaLink, FaSearch, FaYoutube , FaBookmark} from "react-icons/fa";
+import { FaBookmark, FaGithub, FaLink, FaSearch, FaYoutube } from "react-icons/fa";
 import SearchBar from "./search-bar";
+
+type ProjectCard = {
+  id: string;
+  projectName: string;
+  description: string;
+  projectImage: string;
+  githubLink?: string;
+  liveLink?: string;
+  ytLink?: string;
+  techStack: string[];
+  difficulty: string;
+};
+
+type FirebaseProject = {
+  title?: string;
+  projectName?: string;
+  description?: string;
+  image?: string;
+  projectImage?: string;
+  liveUrl?: string;
+  liveLink?: string;
+  sourceUrl?: string;
+  githubLink?: string;
+  ytLink?: string;
+  technologies?: string[] | string;
+  techStack?: string[] | string;
+  difficulty?: string;
+};
+
+const normalizeTechStack = (
+  value: FirebaseProject["technologies"] | FirebaseProject["techStack"]
+) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).map((item) => String(item));
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const normalizeProject = (id: string, value: FirebaseProject): ProjectCard => ({
+  id,
+  projectName: value.title || value.projectName || "Untitled Project",
+  description: value.description || "",
+  projectImage: value.image || value.projectImage || "",
+  githubLink: value.sourceUrl || value.githubLink,
+  liveLink: value.liveUrl || value.liveLink,
+  ytLink: value.ytLink,
+  techStack: normalizeTechStack(value.technologies || value.techStack),
+  difficulty: value.difficulty || "Beginner",
+});
 
 export default function ProjectGrid() {
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [projects, setProjects] = useState<ProjectCard[]>([]);
 
   useEffect(() => {
      const storedFavorites = localStorage.getItem("favoriteProjects");
@@ -18,6 +77,33 @@ export default function ProjectGrid() {
      if (storedFavorites) {
        setFavorites(JSON.parse(storedFavorites));
      }
+  }, []);
+
+  useEffect(() => {
+    const projectsRef = ref(db, "projects");
+
+    const unsubscribe = onValue(
+      projectsRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setProjects([]);
+          return;
+        }
+
+        const data = snapshot.val() as Record<string, FirebaseProject>;
+        const projectsList = Object.entries(data).map(([id, value]) =>
+          normalizeProject(id, value)
+        );
+
+        setProjects(projectsList);
+      },
+      (error) => {
+        console.error("Error fetching projects:", error);
+        setProjects([]);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   const toggleFavorite = (projectName: string) => {
@@ -40,7 +126,7 @@ export default function ProjectGrid() {
   };
 
   const filteredProjects = useMemo(() => {
-    return projectConfig.projects.filter((item) => {
+    return projects.filter((item) => {
       const query = searchQuery.toLowerCase();
 
       const matchesSearch =
@@ -56,7 +142,7 @@ export default function ProjectGrid() {
 
     return matchesSearch && matchesFavorites;
     });  
-  }, [searchQuery, favorites, showFavorites]);
+  }, [projects, searchQuery, favorites, showFavorites]);
 
   return (
     <div className="mt-15">
@@ -86,16 +172,18 @@ export default function ProjectGrid() {
               className="group relative overflow-hidden rounded-2xl border border-border backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10"
             >
               <div className="relative aspect-video overflow-hidden">
-                <Image
-                  src={`/projects/${item.projectImage}`}
-                  alt={item.projectName}
-                  fill
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                  sizes="(max-width: 640px) 100vw,
-                         (max-width: 1024px) 50vw,
-                         33vw"
-                  priority={index === 0}
-                />
+                {item.projectImage ? (
+                  <img
+                    src={item.projectImage}
+                    alt={item.projectName}
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+                    No image available
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                 <button
                   onClick={() => toggleFavorite(item.projectName)}
